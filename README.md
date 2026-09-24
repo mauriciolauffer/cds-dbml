@@ -30,7 +30,7 @@ Install the plugin in your CAP project:
 npm install --save-dev cds-dbml
 ```
 
-_Note: `@sap/cds` >= 7.0.0 is required as a peer dependency._
+_Note: `@sap/cds` >= 8 is required as a peer dependency._
 
 ---
 
@@ -111,9 +111,3 @@ Example CLI usage with options:
 ```sh
 cds compile db --to dbml --dbml:sort
 ```
-
----
-
-## License
-
-[Apache-2.0](LICENSE)
