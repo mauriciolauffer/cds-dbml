@@ -23,14 +23,33 @@
     "type": "git",
     "url": "https://github.com/mauriciolauffer/cds-dbml.git"
   },
+  "workspaces": [
+    ".",
+    "example"
+  ],
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "main": "index.js",
+  "main": "./dist/lib/compile/index.js",
+  "types": "./dist/lib/compile/index.d.ts",
   "exports": {
-    ".": "./index.js",
-    "./cds-plugin": "./cds-plugin.js"
+    ".": {
+      "types": "./dist/lib/compile/index.d.ts",
+      "import": "./dist/lib/compile/index.js",
+      "default": "./dist/lib/compile/index.js"
+    },
+    "./cds-plugin": {
+      "types": "./dist/cds-plugin.d.ts",
+      "import": "./dist/cds-plugin.js",
+      "default": "./dist/cds-plugin.js"
+    }
   },
   "scripts": {
-    "test": "node --test",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/dbml.test.ts",
+    "test:gen": "pnpm --filter cds-dbml-example generate:dbml",
     "lint": "oxfmt --check && oxlint",
     "format": "oxfmt"
   },
@@ -38,8 +57,13 @@
     "@dbml/core": "^10.1.1"
   },
   "devDependencies": {
-    "oxfmt": "^0.68.0",
-    "oxlint": "^1.83.0"
+    "@cap-js/cds-types": "^0.20.0",
+    "@sap/cds": "^10.1.1",
+    "@types/node": "^26.6.3",
+    "oxfmt": "^0.71.0",
+    "oxlint": "^1.83.0",
+    "tsx": "^4.23.15",
+    "typescript": "7.0.2"
   },
   "peerDependencies": {
     "@sap/cds": ">=8"
@@ -47,5 +71,5 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@12.6.0"
+  "packageManager": "pnpm@12.8.1"
 }

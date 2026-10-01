@@ -1,6 +1,9 @@
+import type { DBMLOptions } from "./index.js";
 import cds from "@sap/cds";
 
-export function csn2dbml(csn, options = {}) {
+type Csn = { definitions?: Record<string, any> };
+
+export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
   if (!csn || !csn.definitions) {
     return "";
   }
@@ -98,7 +101,7 @@ export function csn2dbml(csn, options = {}) {
 
 function collectEnums(csn, _model) {
   const enums = [];
-  const defs = csn.definitions || {};
+  const defs: Record<string, any> = csn.definitions || {};
 
   for (const [name, def] of Object.entries(defs)) {
     if ((def.kind === "type" || !def.kind) && def.enum) {
@@ -122,8 +125,8 @@ function collectEnums(csn, _model) {
 
 function collectTables(csn, model, sqlModel, enums) {
   const tables = [];
-  const defs = model.definitions || csn.definitions || {};
-  const sqlDefs = sqlModel?.definitions || {};
+  const defs: Record<string, any> = model.definitions || csn.definitions || {};
+  const sqlDefs: Record<string, any> = sqlModel?.definitions || {};
   const enumNames = new Set(enums.map((e) => e.name));
 
   for (const [name, def] of Object.entries(defs)) {
@@ -138,7 +141,7 @@ function collectTables(csn, model, sqlModel, enums) {
     // Identify primary keys
     const pkKeys = new Set();
     if (def.keys) {
-      for (const [k, v] of Object.entries(def.keys)) {
+      for (const [k, v] of Object.entries(def.keys) as [string, any][]) {
         if (v && typeof v === "object" && v.ref) {
           pkKeys.add(v.ref[0]);
         } else {
@@ -147,7 +150,7 @@ function collectTables(csn, model, sqlModel, enums) {
       }
     }
 
-    for (const [elName, elDef] of Object.entries(elements)) {
+    for (const [elName, elDef] of Object.entries(elements) as [string, any][]) {
       const origElDef = origElements[elName] || elDef;
 
       // Associations and compositions are represented via Ref relationships, not table columns
@@ -269,7 +272,7 @@ function resolveColumnType(elDef, origElDef, defs, enumNames) {
 
 function collectRelationships(csn, model, _sqlModel, tables = []) {
   const relationships = [];
-  const defs = model.definitions || csn.definitions || {};
+  const defs: Record<string, any> = model.definitions || csn.definitions || {};
   const seenRefs = new Set();
 
   const tableColumnsMap = new Map();
@@ -287,7 +290,7 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
 
     const elements = entityDef.elements || {};
 
-    for (const [elName, elDef] of Object.entries(elements)) {
+    for (const [elName, elDef] of Object.entries(elements) as [string, any][]) {
       if (elDef.type !== "cds.Association" && elDef.type !== "cds.Composition") continue;
 
       const targetName = elDef.target;

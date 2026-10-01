@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import cds from "@sap/cds";
 import { Parser } from "@dbml/core";
-import { compileToDBML } from "../index.js";
+import "../cds-plugin.js";
+import { compileToDBML } from "../lib/compile/index.js";
 
 test("Simple Entity Compilation to DBML", () => {
   const csn = cds
