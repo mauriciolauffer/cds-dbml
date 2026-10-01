@@ -1,8 +1,8 @@
 Table "sap.capire.bookshop.Books" {
-  "createdAt" timestamp [note: '{i18n>CreatedAt}']
-  "createdBy" varchar(255) [note: '{i18n>CreatedBy}']
-  "modifiedAt" timestamp [note: '{i18n>ChangedAt}']
-  "modifiedBy" varchar(255) [note: '{i18n>ChangedBy}']
+  "createdAt" timestamp [note: 'Created On']
+  "createdBy" varchar(255) [note: 'Created By']
+  "modifiedAt" timestamp [note: 'Changed On']
+  "modifiedBy" varchar(255) [note: 'Changed By']
   "ID" integer [pk]
   "author_ID" integer
   "title" varchar(255)
@@ -14,10 +14,10 @@ Table "sap.capire.bookshop.Books" {
 }
 
 Table "sap.capire.bookshop.Authors" {
-  "createdAt" timestamp [note: '{i18n>CreatedAt}']
-  "createdBy" varchar(255) [note: '{i18n>CreatedBy}']
-  "modifiedAt" timestamp [note: '{i18n>ChangedAt}']
-  "modifiedBy" varchar(255) [note: '{i18n>ChangedBy}']
+  "createdAt" timestamp [note: 'Created On']
+  "createdBy" varchar(255) [note: 'Created By']
+  "modifiedAt" timestamp [note: 'Changed On']
+  "modifiedBy" varchar(255) [note: 'Changed By']
   "ID" integer [pk]
   "name" varchar(255)
   "dateOfBirth" date
@@ -28,81 +28,81 @@ Table "sap.capire.bookshop.Authors" {
 
 Table "sap.capire.bookshop.Genres" {
   "ID" varchar(36) [pk]
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
   "parent_ID" varchar(36)
 }
 
 Table "sap.common.Languages" {
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(14) [pk, note: '{i18n>LanguageCode}']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(14) [pk, note: 'Language Code']
 }
 
 Table "sap.common.Countries" {
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(3) [pk, note: '{i18n>CountryCode}']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(3) [pk, note: 'Country/Region Code']
 }
 
 Table "sap.common.Currencies" {
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(3) [pk, note: '{i18n>CurrencyCode}']
-  "symbol" varchar(5) [note: '{i18n>CurrencySymbol}']
-  "minorUnit" smallint [note: '{i18n>CurrencyMinorUnit}']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(3) [pk, note: 'Currency Code']
+  "symbol" varchar(5) [note: 'Currency Symbol']
+  "minorUnit" smallint [note: 'Currency Minor Unit Fractions']
   "numcode" integer
   "exponent" integer
   "minor" varchar(255)
 }
 
 Table "sap.common.Timezones" {
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(100) [pk, note: '{i18n>TimeZoneCode}']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(100) [pk, note: 'Time Zone Code']
 }
 
 Table "sap.capire.bookshop.Books.texts" {
   "ID_texts" varchar(36) [pk]
-  "locale" varchar(14) [note: '{i18n>LanguageCode}']
+  "locale" varchar(14) [note: 'Language Code']
   "ID" integer
   "title" varchar(255)
   "descr" varchar(255)
 }
 
 Table "sap.capire.bookshop.Genres.texts" {
-  "locale" varchar(14) [pk, note: '{i18n>LanguageCode}']
+  "locale" varchar(14) [pk, note: 'Language Code']
   "ID" varchar(36) [pk]
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
 }
 
 Table "sap.common.Languages.texts" {
-  "locale" varchar(14) [pk, note: '{i18n>LanguageCode}']
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(14) [pk, note: '{i18n>LanguageCode}']
+  "locale" varchar(14) [pk, note: 'Language Code']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(14) [pk, note: 'Language Code']
 }
 
 Table "sap.common.Countries.texts" {
-  "locale" varchar(14) [pk, note: '{i18n>LanguageCode}']
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(3) [pk, note: '{i18n>CountryCode}']
+  "locale" varchar(14) [pk, note: 'Language Code']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(3) [pk, note: 'Country/Region Code']
 }
 
 Table "sap.common.Currencies.texts" {
-  "locale" varchar(14) [pk, note: '{i18n>LanguageCode}']
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(3) [pk, note: '{i18n>CurrencyCode}']
+  "locale" varchar(14) [pk, note: 'Language Code']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(3) [pk, note: 'Currency Code']
 }
 
 Table "sap.common.Timezones.texts" {
-  "locale" varchar(14) [pk, note: '{i18n>LanguageCode}']
-  "name" varchar(255) [note: '{i18n>Name}']
-  "descr" varchar(1000) [note: '{i18n>Description}']
-  "code" varchar(100) [pk, note: '{i18n>TimeZoneCode}']
+  "locale" varchar(14) [pk, note: 'Language Code']
+  "name" varchar(255) [note: 'Name']
+  "descr" varchar(1000) [note: 'Description']
+  "code" varchar(100) [pk, note: 'Time Zone Code']
 }
 
 Ref: "sap.capire.bookshop.Books"."author_ID" > "sap.capire.bookshop.Authors"."ID"

@@ -9,6 +9,7 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
   }
 
   const model = cds.reflect ? cds.reflect(csn) : csn;
+  const resolveI18nText = createI18nResolver(csn);
   let sqlModel;
   try {
     if (cds.compile?.for?.sql) {
@@ -27,16 +28,11 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
     lines.push("}\n");
   }
 
-  // Collect enums
-  const enums = collectEnums(csn, model);
-  // Collect tables
-  const tables = collectTables(csn, model, sqlModel, enums);
-  // Collect relationships (Ref)
+  const enums = collectEnums(csn, model, resolveI18nText);
+  const tables = collectTables(csn, model, sqlModel, enums, resolveI18nText);
   const relationships = collectRelationships(csn, model, sqlModel, tables);
-  // Collect TableGroups
   const tableGroups = collectTableGroups(tables, options);
 
-  // Sorting option
   if (options.sort) {
     enums.sort((a, b) => a.name.localeCompare(b.name));
     tables.sort((a, b) => a.name.localeCompare(b.name));
@@ -99,7 +95,7 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
   return `${lines.join("\n").trim()}\n`;
 }
 
-function collectEnums(csn, _model) {
+function collectEnums(csn, _model, resolveI18nText) {
   const enums = [];
   const defs: Record<string, any> = csn.definitions || {};
 
@@ -109,13 +105,14 @@ function collectEnums(csn, _model) {
       for (const [key, valObj] of Object.entries(def.enum)) {
         const val =
           typeof valObj === "object" && valObj !== null && "val" in valObj ? valObj.val : key;
-        const note = getNote(valObj) || (val !== key ? `Value: ${val}` : undefined);
+        const note =
+          getNote(valObj, resolveI18nText) || (val !== key ? `Value: ${val}` : undefined);
         values.push({ name: key, val, note });
       }
       enums.push({
         name,
         values,
-        note: getNote(def),
+        note: getNote(def, resolveI18nText),
       });
     }
   }
@@ -123,7 +120,7 @@ function collectEnums(csn, _model) {
   return enums;
 }
 
-function collectTables(csn, model, sqlModel, enums) {
+function collectTables(csn, model, sqlModel, enums, resolveI18nText) {
   const tables = [];
   const defs: Record<string, any> = model.definitions || csn.definitions || {};
   const sqlDefs: Record<string, any> = sqlModel?.definitions || {};
@@ -152,7 +149,6 @@ function collectTables(csn, model, sqlModel, enums) {
 
     for (const [elName, elDef] of Object.entries(elements) as [string, any][]) {
       const origElDef = origElements[elName] || elDef;
-
       // Associations and compositions are represented via Ref relationships, not table columns
       if (
         elDef.type === "cds.Association" ||
@@ -162,18 +158,15 @@ function collectTables(csn, model, sqlModel, enums) {
       ) {
         continue;
       }
-
       const isPk = pkKeys.has(elName) || elDef.key === true || origElDef.key === true;
       const isNotNull =
         isPk ||
         elDef.notNull === true ||
         elDef["@mandatory"] === true ||
         origElDef.notNull === true;
-
       const type = resolveColumnType(elDef, origElDef, defs, enumNames);
       const defaultVal = formatDefaultValue(elDef.default || origElDef.default);
-      const note = getNote(origElDef) || getNote(elDef);
-
+      const note = getNote(origElDef, resolveI18nText) || getNote(elDef, resolveI18nText);
       columns.push({
         name: elName,
         type,
@@ -187,10 +180,9 @@ function collectTables(csn, model, sqlModel, enums) {
     tables.push({
       name,
       columns,
-      note: getNote(def),
+      note: getNote(def, resolveI18nText),
     });
   }
-
   return tables;
 }
 
@@ -199,7 +191,6 @@ function resolveColumnType(elDef, origElDef, defs, enumNames) {
   if (origType && enumNames.has(origType)) {
     return `"${origType}"`;
   }
-
   if (origType && defs[origType]) {
     const typeDef = defs[origType];
     if (typeDef.kind === "type" && typeDef.enum && enumNames.has(origType)) {
@@ -274,12 +265,10 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
   const relationships = [];
   const defs: Record<string, any> = model.definitions || csn.definitions || {};
   const seenRefs = new Set();
-
   const tableColumnsMap = new Map();
   for (const t of tables) {
     tableColumnsMap.set(t.name, new Set(t.columns.map((c) => c.name)));
   }
-
   for (const [entityName, entityDef] of Object.entries(defs)) {
     if (entityDef.kind !== "entity") continue;
     if (
@@ -289,7 +278,6 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
       continue;
 
     const elements = entityDef.elements || {};
-
     for (const [elName, elDef] of Object.entries(elements) as [string, any][]) {
       if (elDef.type !== "cds.Association" && elDef.type !== "cds.Composition") continue;
 
@@ -298,7 +286,6 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
       if (!targetDef || targetDef.kind !== "entity") continue;
 
       const isToMany = elDef.cardinality?.max === "*";
-
       if (!isToMany) {
         // To-one association / composition
         // Foreign key field is usually in source entity (e.g., author_ID)
@@ -334,7 +321,6 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
 
 function collectTableGroups(tables, _options) {
   const groupsMap = new Map();
-
   for (const table of tables) {
     const parts = table.name.split(".");
     if (parts.length > 1) {
@@ -353,17 +339,14 @@ function collectTableGroups(tables, _options) {
       tables: groupTables,
     });
   }
-
   return tableGroups;
 }
 
 function formatDefaultValue(defaultVal) {
   if (defaultVal === undefined || defaultVal === null) return undefined;
-
   if (typeof defaultVal === "object" && "val" in defaultVal) {
     defaultVal = defaultVal.val;
   }
-
   if (typeof defaultVal === "string") {
     return `'${defaultVal}'`;
   }
@@ -376,9 +359,22 @@ function formatDefaultValue(defaultVal) {
   return `'${defaultVal}'`;
 }
 
-function getNote(def) {
+function createI18nResolver(model: Csn) {
+  const texts = cds.i18n.bundle4(model).texts4(cds.env.i18n.default_language);
+
+  return (value) =>
+    typeof value === "string"
+      ? value.replace(/\{i18n>([^}]+)\}/g, (placeholder, key) => {
+          const translated = texts[key];
+          return typeof translated === "string" ? translated : placeholder;
+        })
+      : value;
+}
+
+function getNote(def, resolveI18nText) {
   if (!def) return undefined;
-  return def["@title"] || def["@description"] || def.doc || def.comment || def["@cds.doc"];
+  const note = def["@title"] || def["@description"] || def.doc || def.comment || def["@cds.doc"];
+  return resolveI18nText(note);
 }
 
 function formatString(str) {

@@ -40,6 +40,8 @@ test("Localized Entities and Example Schema Syntax Validation", async () => {
   // Must not contain invalid Ref for localized_ID or pseudo association columns
   assert.doesNotMatch(dbml, /localized_ID/);
   assert.doesNotMatch(dbml, /"author"\s+association/);
+  assert.doesNotMatch(dbml, /\{i18n>/);
+  assert.match(dbml, /"createdAt" timestamp \[note: 'Created On'\]/);
 
   // Validate syntax with @dbml/core
   const parsed = Parser.parse(dbml, "dbml");
