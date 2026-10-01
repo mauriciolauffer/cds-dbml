@@ -22,35 +22,57 @@ type CdsWithEvents = typeof cds & {
 const cdsWithEvents = cds as CdsWithEvents;
 
 const events = {
-  /**
-   * Called before DBML conversion is started.
-   * Can be used to modify the CSN or options before conversion.
-   */
   before: "compile.to.dbml",
-  /**
-   * Called after DBML conversion is done.
-   * Can be used to modify the resulting DBML string before returning.
-   */
   after: "after:compile.to.dbml",
 };
 
 /**
- * Validates DBML string syntax using @dbml/core.
- * @param {string} dbml
+ * Validates a DBML document using the DBML parser.
+ *
+ * @param dbml DBML source to validate.
+ * @returns Nothing when the document is valid or empty.
+ * @throws {Error} When the parser rejects the DBML document.
  */
 export function validateDBML(dbml: string): void {
   if (!dbml || typeof dbml !== "string") return;
   try {
     Parser.parse(dbml, "dbml");
-  } catch (err) {
-    let msg = err.message;
-    if (!msg && err.diags && err.diags.length > 0) {
-      msg = err.diags.map((d) => d.message || d.toString() || "DBML syntax error").join("; ");
-    }
+  } catch (err: unknown) {
+    const msg = getDbmlParseErrorMessage(err);
     throw new Error(`DBML Syntax Error: ${msg || "Invalid DBML structure"}`, { cause: err });
   }
 }
 
+function getDbmlParseErrorMessage(error: unknown): string | undefined {
+  if (!isRecord(error)) return undefined;
+  if (typeof error.message === "string") return error.message;
+  if (!Array.isArray(error.diags)) return undefined;
+
+  return error.diags
+    .map((diagnostic) => {
+      if (isRecord(diagnostic) && typeof diagnostic.message === "string") {
+        return diagnostic.message;
+      }
+      return String(diagnostic);
+    })
+    .join("; ");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * Compiles a CAP CSN model into a DBML document.
+ *
+ * Emits the compile-to-DBML lifecycle events, allowing listeners to adjust options or the result.
+ * Validation runs by default.
+ *
+ * @param csn CAP model in CSN notation.
+ * @param options Output options, including sorting, project metadata, table groups, and validation.
+ * @returns The generated DBML document, terminated with a newline.
+ * @throws {Error} When generated DBML validation fails.
+ */
 export function compileToDBML(csn: object, options: DBMLOptions = {}): string {
   cdsWithEvents.emit(events.before, { csn, options });
   let result = csn2dbml(csn, options);
@@ -66,5 +88,3 @@ export function compileToDBML(csn: object, options: DBMLOptions = {}): string {
 }
 
 compileToDBML.events = events;
-
-export default compileToDBML;
