@@ -1,6 +1,25 @@
-import { csn2dbml } from "./csn2dbml.js";
 import cds from "@sap/cds";
 import { Parser } from "@dbml/core";
+import { csn2dbml } from "./csn2dbml.js";
+
+export interface DBMLOptions {
+  project?: string;
+  sort?: boolean;
+  tableGroups?: boolean;
+  validate?: boolean;
+}
+
+type CompileEventPayload = {
+  csn: object;
+  options: DBMLOptions;
+  result?: string;
+};
+
+type CdsWithEvents = typeof cds & {
+  emit(event: string, payload: CompileEventPayload): boolean;
+};
+
+const cdsWithEvents = cds as CdsWithEvents;
 
 const events = {
   /**
@@ -19,7 +38,7 @@ const events = {
  * Validates DBML string syntax using @dbml/core.
  * @param {string} dbml
  */
-export function validateDBML(dbml) {
+export function validateDBML(dbml: string): void {
   if (!dbml || typeof dbml !== "string") return;
   try {
     Parser.parse(dbml, "dbml");
@@ -32,11 +51,11 @@ export function validateDBML(dbml) {
   }
 }
 
-export function compileToDBML(csn, options = {}) {
-  cds.emit(events.before, { csn, options });
+export function compileToDBML(csn: object, options: DBMLOptions = {}): string {
+  cdsWithEvents.emit(events.before, { csn, options });
   let result = csn2dbml(csn, options);
   const param = { csn, options, result };
-  cds.emit(events.after, param);
+  cdsWithEvents.emit(events.after, param);
   if (param.result !== undefined) {
     result = param.result;
   }

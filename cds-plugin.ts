@@ -1,6 +1,8 @@
 import cds from "@sap/cds";
 import { compileToDBML } from "./lib/compile/index.js";
 
+type CompileTargets = typeof cds.compile.to & { dbml?: typeof compileToDBML };
+
 if (cds.compile?.to) {
   try {
     cds.extend(cds.compile.to.constructor).with(
@@ -12,6 +14,6 @@ if (cds.compile?.to) {
     );
   } catch {
     // Fallback assignment if extend fails
-    cds.compile.to.dbml = compileToDBML;
+    (cds.compile.to as CompileTargets).dbml = compileToDBML;
   }
 }

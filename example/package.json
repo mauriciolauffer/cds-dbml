@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "start": "cds-serve",
-    "generate:dbml": "cds compile db --to dbml > schema.dbml"
+    "generate:dbml": "npx tsc --project ../tsconfig.json && cds compile db --to dbml > schema.dbml"
   },
   "dependencies": {
     "@sap/cds": "^10"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^3",
-    "cds-dbml": "workspace:*"
+    "cds-dbml": "link:.."
   }
 }

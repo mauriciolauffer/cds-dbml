@@ -27,7 +27,7 @@ This plugin allows you to automatically export your CAP data models (`.cds` file
 Install the plugin in your CAP project:
 
 ```sh
-npm install --save-dev cds-dbml
+pnpm add --save-dev cds-dbml
 ```
 
 _Note: `@sap/cds` >= 8 is required as a peer dependency._
@@ -57,7 +57,7 @@ You can call the compiler programmatically in Node.js (ES Modules):
 
 ```js
 import cds from "@sap/cds";
-import "cds-dbml"; // Ensures plugin target is registered
+import "cds-dbml/cds-plugin"; // Ensures plugin target is registered
 
 const csn = await cds.load("db/schema.cds");
 
