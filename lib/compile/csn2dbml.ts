@@ -1,27 +1,56 @@
+import type { csn } from "@sap/cds";
 import type { DBMLOptions } from "./index.js";
 import cds from "@sap/cds";
 
-type Csn = { definitions?: Record<string, any> };
+type Csn = csn.CSN;
+type CsnDefinition = csn.Definition & CsnTypeFacets & { enum?: Record<string, CsnEnumValue> };
+type CsnElement = Omit<csn.EntityElements[string], "default"> & { default?: CsnDefault };
+type CsnTypeFacets = Pick<CsnElement, "type" | "length" | "precision" | "scale">;
+type CsnType = CsnTypeFacets;
+type CsnEnumValue = Record<string, unknown> & { val?: string | number | boolean };
+type CsnDefault = { val?: string | number | boolean; xpr?: unknown[] } | string | number | boolean;
+type I18nResolver = (value: string | undefined) => string | undefined;
+type DbmlEnum = { name: string; values: DbmlEnumValue[]; note?: string };
+type DbmlEnumValue = { name: string; val: string | number | boolean; note?: string };
+type DbmlColumn = {
+  name: string;
+  type: string;
+  isPk: boolean;
+  isNotNull: boolean;
+  default?: string;
+  note?: string;
+};
+type DbmlTable = { name: string; columns: DbmlColumn[]; note?: string };
+type DbmlRelationship = { ref: string };
+type DbmlTableGroup = { name: string; tables: string[] };
 
+/**
+ * Renders a CAP CSN model as DBML without lifecycle events or syntax validation.
+ *
+ * Resolves CAP i18n placeholders in notes using the model's default language bundle.
+ *
+ * @param csn CAP model in CSN notation.
+ * @param options Output options controlling project metadata, ordering, and table groups.
+ * @returns The generated DBML document, or an empty string when the model has no definitions.
+ */
 export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
   if (!csn || !csn.definitions) {
     return "";
   }
 
-  const model = cds.reflect ? cds.reflect(csn) : csn;
+  const model = (cds.reflect?.(csn) ?? csn) as unknown as Csn;
   const resolveI18nText = createI18nResolver(csn);
-  let sqlModel;
+  let sqlModel: Csn | undefined;
   try {
     if (cds.compile?.for?.sql) {
-      sqlModel = cds.compile.for.sql(csn);
+      sqlModel = cds.compile.for.sql(csn) as unknown as Csn;
     }
   } catch {
     // Fallback if sql compile fails on partial CSN
   }
 
-  const lines = [];
+  const lines: string[] = [];
 
-  // 1. Project Header (if provided)
   if (options.project) {
     lines.push(`Project "${options.project}" {`);
     lines.push("  database_type: 'CAP CDS'");
@@ -40,7 +69,6 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
     tableGroups.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  // Format Enums
   for (const enm of enums) {
     lines.push(`Enum "${enm.name}" {`);
     for (const val of enm.values) {
@@ -50,7 +78,6 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
     lines.push("}\n");
   }
 
-  // Format Tables
   for (const table of tables) {
     const tableNote = table.note ? ` [note: ${formatString(table.note)}]` : "";
     lines.push(`Table "${table.name}"${tableNote} {`);
@@ -73,7 +100,6 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
     lines.push("}\n");
   }
 
-  // Format Relationships
   if (relationships.length > 0) {
     for (const rel of relationships) {
       lines.push(rel.ref);
@@ -81,7 +107,6 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
     lines.push("");
   }
 
-  // Format TableGroups
   if (options.tableGroups !== false) {
     for (const tg of tableGroups) {
       lines.push(`TableGroup "${tg.name}" {`);
@@ -95,16 +120,15 @@ export function csn2dbml(csn: Csn, options: DBMLOptions = {}) {
   return `${lines.join("\n").trim()}\n`;
 }
 
-function collectEnums(csn, _model, resolveI18nText) {
-  const enums = [];
-  const defs: Record<string, any> = csn.definitions || {};
+function collectEnums(csn: Csn, _model: Csn, resolveI18nText: I18nResolver): DbmlEnum[] {
+  const enums: DbmlEnum[] = [];
+  const defs = (csn.definitions || {}) as unknown as Record<string, CsnDefinition>;
 
   for (const [name, def] of Object.entries(defs)) {
     if ((def.kind === "type" || !def.kind) && def.enum) {
       const values = [];
       for (const [key, valObj] of Object.entries(def.enum)) {
-        const val =
-          typeof valObj === "object" && valObj !== null && "val" in valObj ? valObj.val : key;
+        const val = valObj.val ?? key;
         const note =
           getNote(valObj, resolveI18nText) || (val !== key ? `Value: ${val}` : undefined);
         values.push({ name: key, val, note });
@@ -120,10 +144,19 @@ function collectEnums(csn, _model, resolveI18nText) {
   return enums;
 }
 
-function collectTables(csn, model, sqlModel, enums, resolveI18nText) {
-  const tables = [];
-  const defs: Record<string, any> = model.definitions || csn.definitions || {};
-  const sqlDefs: Record<string, any> = sqlModel?.definitions || {};
+function collectTables(
+  csn: Csn,
+  model: Csn,
+  sqlModel: Csn | undefined,
+  enums: DbmlEnum[],
+  resolveI18nText: I18nResolver,
+): DbmlTable[] {
+  const tables: DbmlTable[] = [];
+  const defs = (model.definitions || csn.definitions || {}) as unknown as Record<
+    string,
+    CsnDefinition
+  >;
+  const sqlDefs = (sqlModel?.definitions || {}) as unknown as Record<string, CsnDefinition>;
   const enumNames = new Set(enums.map((e) => e.name));
 
   for (const [name, def] of Object.entries(defs)) {
@@ -131,15 +164,14 @@ function collectTables(csn, model, sqlModel, enums, resolveI18nText) {
     if (def["@cds.persistence.skip"] === true || def["@cds.persistence.exists"] === true) continue;
 
     const sqlDef = sqlDefs[name];
-    const elements = sqlDef?.elements || def.elements || {};
-    const origElements = def.elements || {};
+    const elements = (sqlDef?.elements || def.elements || {}) as Record<string, CsnElement>;
+    const origElements = (def.elements || {}) as Record<string, CsnElement>;
     const columns = [];
 
-    // Identify primary keys
     const pkKeys = new Set();
     if (def.keys) {
-      for (const [k, v] of Object.entries(def.keys) as [string, any][]) {
-        if (v && typeof v === "object" && v.ref) {
+      for (const [k, v] of Object.entries(def.keys)) {
+        if (v.ref) {
           pkKeys.add(v.ref[0]);
         } else {
           pkKeys.add(k);
@@ -147,7 +179,7 @@ function collectTables(csn, model, sqlModel, enums, resolveI18nText) {
       }
     }
 
-    for (const [elName, elDef] of Object.entries(elements) as [string, any][]) {
+    for (const [elName, elDef] of Object.entries(elements)) {
       const origElDef = origElements[elName] || elDef;
       // Associations and compositions are represented via Ref relationships, not table columns
       if (
@@ -186,7 +218,12 @@ function collectTables(csn, model, sqlModel, enums, resolveI18nText) {
   return tables;
 }
 
-function resolveColumnType(elDef, origElDef, defs, enumNames) {
+function resolveColumnType(
+  elDef: CsnType,
+  origElDef: CsnType,
+  defs: Record<string, CsnDefinition>,
+  enumNames: Set<string>,
+): string {
   const origType = origElDef?.type;
   if (origType && enumNames.has(origType)) {
     return `"${origType}"`;
@@ -199,13 +236,12 @@ function resolveColumnType(elDef, origElDef, defs, enumNames) {
   }
 
   const rawType = elDef.type || origType;
+  if (!rawType) return "varchar";
 
-  // Check enum reference
   if (rawType && enumNames.has(rawType)) {
     return `"${rawType}"`;
   }
 
-  // Check type alias in defs
   const typeDef = defs[rawType];
   if (typeDef && typeDef.kind === "type") {
     if (typeDef.enum && enumNames.has(rawType)) {
@@ -257,15 +293,23 @@ function resolveColumnType(elDef, origElDef, defs, enumNames) {
       if (rawType?.startsWith("cds.")) {
         return rawType.replace(/^cds\./, "").toLowerCase();
       }
-      return rawType ? `"${rawType}"` : "varchar";
+      return `"${rawType}"`;
   }
 }
 
-function collectRelationships(csn, model, _sqlModel, tables = []) {
-  const relationships = [];
-  const defs: Record<string, any> = model.definitions || csn.definitions || {};
-  const seenRefs = new Set();
-  const tableColumnsMap = new Map();
+function collectRelationships(
+  csn: Csn,
+  model: Csn,
+  _sqlModel: Csn | undefined,
+  tables: DbmlTable[] = [],
+): DbmlRelationship[] {
+  const relationships: DbmlRelationship[] = [];
+  const defs = (model.definitions || csn.definitions || {}) as unknown as Record<
+    string,
+    CsnDefinition
+  >;
+  const seenRefs = new Set<string>();
+  const tableColumnsMap = new Map<string, Set<string>>();
   for (const t of tables) {
     tableColumnsMap.set(t.name, new Set(t.columns.map((c) => c.name)));
   }
@@ -278,10 +322,11 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
       continue;
 
     const elements = entityDef.elements || {};
-    for (const [elName, elDef] of Object.entries(elements) as [string, any][]) {
+    for (const [elName, elDef] of Object.entries(elements)) {
       if (elDef.type !== "cds.Association" && elDef.type !== "cds.Composition") continue;
 
       const targetName = elDef.target;
+      if (!targetName) continue;
       const targetDef = defs[targetName];
       if (!targetDef || targetDef.kind !== "entity") continue;
 
@@ -319,8 +364,8 @@ function collectRelationships(csn, model, _sqlModel, tables = []) {
   return relationships;
 }
 
-function collectTableGroups(tables, _options) {
-  const groupsMap = new Map();
+function collectTableGroups(tables: DbmlTable[], _options: DBMLOptions): DbmlTableGroup[] {
+  const groupsMap = new Map<string, string[]>();
   for (const table of tables) {
     const parts = table.name.split(".");
     if (parts.length > 1) {
@@ -328,11 +373,11 @@ function collectTableGroups(tables, _options) {
       if (!groupsMap.has(namespace)) {
         groupsMap.set(namespace, []);
       }
-      groupsMap.get(namespace).push(table.name);
+      groupsMap.get(namespace)?.push(table.name);
     }
   }
 
-  const tableGroups = [];
+  const tableGroups: DbmlTableGroup[] = [];
   for (const [name, groupTables] of groupsMap.entries()) {
     tableGroups.push({
       name,
@@ -342,7 +387,7 @@ function collectTableGroups(tables, _options) {
   return tableGroups;
 }
 
-function formatDefaultValue(defaultVal) {
+function formatDefaultValue(defaultVal: CsnDefault | undefined): string | undefined {
   if (defaultVal === undefined || defaultVal === null) return undefined;
   if (typeof defaultVal === "object" && "val" in defaultVal) {
     defaultVal = defaultVal.val;
@@ -359,10 +404,10 @@ function formatDefaultValue(defaultVal) {
   return `'${defaultVal}'`;
 }
 
-function createI18nResolver(model: Csn) {
+function createI18nResolver(model: Csn): I18nResolver {
   const texts = cds.i18n.bundle4(model).texts4(cds.env.i18n.default_language);
 
-  return (value) =>
+  return (value: string | undefined) =>
     typeof value === "string"
       ? value.replace(/\{i18n>([^}]+)\}/g, (placeholder, key) => {
           const translated = texts[key];
@@ -371,16 +416,21 @@ function createI18nResolver(model: Csn) {
       : value;
 }
 
-function getNote(def, resolveI18nText) {
+function getNote(def: object | undefined, resolveI18nText: I18nResolver) {
   if (!def) return undefined;
-  const note = def["@title"] || def["@description"] || def.doc || def.comment || def["@cds.doc"];
+  const annotations = def as Record<string, unknown>;
+  const note = [
+    annotations["@title"],
+    annotations["@description"],
+    annotations.doc,
+    annotations.comment,
+    annotations["@cds.doc"],
+  ].find((candidate): candidate is string => typeof candidate === "string");
   return resolveI18nText(note);
 }
 
-function formatString(str) {
+function formatString(str: string) {
   if (!str) return "''";
   const escaped = str.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   return `'${escaped}'`;
 }
-
-export default csn2dbml;

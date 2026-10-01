@@ -13,6 +13,7 @@
   },
   "rules": {
     "import/no-unassigned-import": "off",
+    "import/no-default-export": "error",
     "import/extensions": ["error", "ignorePackages"]
   },
   "env": {

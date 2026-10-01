@@ -28,7 +28,6 @@ test("Simple Entity Compilation to DBML", () => {
   assert.match(dbml, /"stock" integer/);
   assert.match(dbml, /TableGroup "my\.bookshop"/);
 
-  // Validate syntax with @dbml/core
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -37,13 +36,11 @@ test("Localized Entities and Example Schema Syntax Validation", async () => {
   const csn = await cds.load("example/db");
   const dbml = compileToDBML(csn);
 
-  // Must not contain invalid Ref for localized_ID or pseudo association columns
   assert.doesNotMatch(dbml, /localized_ID/);
   assert.doesNotMatch(dbml, /"author"\s+association/);
   assert.doesNotMatch(dbml, /\{i18n>/);
   assert.match(dbml, /"createdAt" timestamp \[note: 'Created On'\]/);
 
-  // Validate syntax with @dbml/core
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -84,7 +81,6 @@ test("Data Types, Default Values, and Not Null", () => {
   assert.match(dbml, /"blobData" blob/);
   assert.match(dbml, /"textData" text/);
 
-  // Validate syntax
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -114,7 +110,6 @@ test("Enum Definitions and Mapping", () => {
   assert.match(dbml, /"NON_FICTION"/);
   assert.match(dbml, /"genre" "my\.bookshop\.Genre"/);
 
-  // Validate syntax
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -143,7 +138,6 @@ test("Managed Associations and Relationships", () => {
   assert.match(dbml, /"author_ID" varchar\(36\)/);
   assert.match(dbml, /Ref: "my\.bookshop\.Books"\."author_ID" > "my\.bookshop\.Authors"\."ID"/);
 
-  // Validate syntax
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -170,7 +164,6 @@ test("Compositions and Parent-Child Entities", () => {
 
   assert.match(dbml, /Ref: "my\.orders\.OrderItems"\."parent_ID" > "my\.orders\.Orders"\."ID"/);
 
-  // Validate syntax
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -201,7 +194,6 @@ test("Doc Comments and Annotations (@title, @description)", () => {
   assert.match(dbml, /Table "my\.bookshop\.Books" \[note: 'Book Catalog'\]/);
   assert.match(dbml, /"ID" varchar\(36\) \[pk, note: 'Primary Identifier'\]/);
 
-  // Validate syntax
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -230,13 +222,11 @@ test("Options: Sorting, Project Header, Disable TableGroups", () => {
   assert.match(dbml, /Project "MyBookshopProject"/);
   assert.doesNotMatch(dbml, /TableGroup/);
 
-  // Verify Zebra comes after Alpha in sorted output
   const alphaIdx = dbml.indexOf('Table "my.bookshop.Alpha"');
   const zebraIdx = dbml.indexOf('Table "my.bookshop.Zebra"');
   assert.ok(alphaIdx >= 0 && zebraIdx >= 0);
   assert.ok(alphaIdx < zebraIdx);
 
-  // Validate syntax
   const parsed = Parser.parse(dbml, "dbml");
   assert.ok(parsed);
 });
@@ -244,30 +234,31 @@ test("Options: Sorting, Project Header, Disable TableGroups", () => {
 test("Lifecycle Event Hooks (before and after)", () => {
   let beforeHookCalled = false;
   let afterHookCalled = false;
-
-  cds.on("compile.to.dbml", ({ _csn, options }) => {
+  const beforeHandler = ({ options }: { options: { project?: string } }) => {
     beforeHookCalled = true;
     options.project = "EventHookProject";
-  });
-
-  cds.on("after:compile.to.dbml", ({ _csn, _options, _result }) => {
+  };
+  const afterHandler = () => {
     afterHookCalled = true;
-  });
+  };
 
-  const csn = cds
-    .compile(`
-    namespace my.bookshop;
-    entity Books { key ID : UUID; }
-  `)
-    .to.csn();
+  cds.on("compile.to.dbml", beforeHandler);
+  cds.on("after:compile.to.dbml", afterHandler);
+  try {
+    const csn = cds
+      .compile(`
+      namespace my.bookshop;
+      entity Books { key ID : UUID; }
+    `)
+      .to.csn();
+    const dbml = cds.compile.to.dbml(csn);
 
-  const dbml = cds.compile.to.dbml(csn);
-
-  assert.ok(beforeHookCalled);
-  assert.ok(afterHookCalled);
-  assert.match(dbml, /Project "EventHookProject"/);
-
-  // Validate syntax
-  const parsed = Parser.parse(dbml, "dbml");
-  assert.ok(parsed);
+    assert.ok(beforeHookCalled);
+    assert.ok(afterHookCalled);
+    assert.match(dbml, /Project "EventHookProject"/);
+    assert.ok(Parser.parse(dbml, "dbml"));
+  } finally {
+    cds.off("compile.to.dbml", beforeHandler);
+    cds.off("after:compile.to.dbml", afterHandler);
+  }
 });
