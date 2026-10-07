@@ -12,4 +12,4 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: mauriciolauffer/.github/.github/workflows/npm-publish.yml@main
+    uses: mauriciolauffer/.github/.github/workflows/pnpm-publish.yml@main
