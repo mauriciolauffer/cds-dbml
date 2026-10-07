@@ -54,14 +54,14 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@dbml/core": "^10.1.1"
+    "@dbml/core": "^10.2.0"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.20.0",
     "@sap/cds": "^10.1.1",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "oxfmt": "^0.71.0",
-    "oxlint": "^1.83.0",
+    "oxlint": "^1.87.0",
     "tsx": "^4.23.15",
     "typescript": "7.0.2"
   },
