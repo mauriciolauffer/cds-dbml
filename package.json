@@ -1,6 +1,6 @@
 {
   "name": "cds-dbml",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "CAP plugin for DBML (Database Markup Language) generation",
   "keywords": [
     "cap",
@@ -54,14 +54,14 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@dbml/core": "^10.2.0"
+    "@dbml/core": "^10.3.1"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.20.0",
     "@sap/cds": "^10.1.1",
-    "@types/node": "^26.6.4",
-    "oxfmt": "^0.71.0",
-    "oxlint": "^1.87.0",
+    "@types/node": "^26.6.5",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
     "tsx": "^4.23.15",
     "typescript": "7.0.2"
   },

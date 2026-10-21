@@ -1,8 +1,12 @@
-# @cap-js/dbml (cds-dbml)
+# cds-dbml
+
+[![npm](https://img.shields.io/npm/v/cds-dbml)](https://www.npmjs.com/package/cds-dbml) [![test](https://github.com/mauriciolauffer/cds-dbml/actions/workflows/test.yml/badge.svg)](https://github.com/mauriciolauffer/cds-dbml/actions/workflows/test.yml)
 
 > SAP Cloud Application Programming Model (CAP) plugin to generate Database Markup Language (DBML) schemas from CDS models.
 
-[DBML](https://dbml.dbdocs.io/home/) (Database Markup Language) is an open-source, readable DSL designed to define and document database schema designs. Tools like [dbdocs](https://dbdocs.io) and [dbdiagram.io](https://dbdiagram.io) allow visualizing DBML schemas as interactive database documentation and diagrams.
+[DBML](https://dbml.dbdiagram.io/home/) (Database Markup Language) is an open-source, readable DSL designed to define and document database schema designs. Tools like [dbdocs](https://dbdocs.io) and [dbdiagram.io](https://dbdiagram.io) allow visualizing DBML schemas as interactive database documentation and diagrams.
+
+There are also VS Code extensions to visualize ERD (Entity Relationship Diagram) database schemas from dbml files. For instance: [DBML Entity-Relationship Diagrams visualizer](https://marketplace.visualstudio.com/items?itemName=bocovo.dbml-erd-visualizer)
 
 This plugin allows you to automatically export your CAP data models (`.cds` files) into DBML format via the CAP CLI (`cds compile`) or programmatically via Node.js.
 
