@@ -1,6 +1,6 @@
 {
   "name": "cds-dbml",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CAP plugin for DBML (Database Markup Language) generation",
   "keywords": [
     "cap",
