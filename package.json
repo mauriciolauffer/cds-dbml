@@ -54,7 +54,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@dbml/core": "^10.3.1"
+    "@dbml/core": "^11.0.0"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.20.0",
