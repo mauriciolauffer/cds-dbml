@@ -172,10 +172,10 @@ importers:
     devDependencies:
       '@cap-js/cds-types':
         specifier: ^0.20.0
-        version: 0.20.0(@sap/cds@10.1.1(@eslint/js@10.0.1))(@sap/xssec@4.15.0)(@types/express@5.0.6)
+        version: 0.20.0(@sap/cds@10.2.2(@eslint/js@10.0.1))(@sap/xssec@4.15.0)(@types/express@5.0.6)
       '@sap/cds':
         specifier: ^10.1.1
-        version: 10.1.1(@eslint/js@10.0.1)
+        version: 10.2.2(@eslint/js@10.0.1)
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -196,11 +196,11 @@ importers:
     dependencies:
       '@sap/cds':
         specifier: ^10
-        version: 10.1.1(@eslint/js@10.0.1)
+        version: 10.2.2(@eslint/js@10.0.1)
     devDependencies:
       '@cap-js/sqlite':
         specifier: ^3
-        version: 3.1.2(@sap/cds@10.1.1(@eslint/js@10.0.1))
+        version: 3.1.2(@sap/cds@10.2.2(@eslint/js@10.0.1))
       cds-dbml:
         specifier: link:..
         version: link:..
@@ -666,9 +666,9 @@ packages:
     peerDependencies:
       '@sap/cds': '>=8'
 
-  '@sap/cds@10.1.1':
-    resolution: {integrity: sha512-0F2R0BqQS6q463WlDlkSqPaV8WK/YXDCKgVmAWcvYSRwcbJUFDBK1X4RF5obHFWjqOO1rXsf9Jh105inHXU3/g==}
-    engines: {node: '>=22'}
+  '@sap/cds@10.2.2':
+    resolution: {integrity: sha512-HO5Uk4wZedf7lEdMQyd9Cxa7Wny8NLDUp/WDwr5rKU6Byi2vu0kbAoLM8oREIVhj11DwQn9j+lSaBJNTCTAoEQ==}
+    engines: {node: '>=22.12'}
     hasBin: true
     peerDependencies:
       '@eslint/js': ^9 || ^10
@@ -1176,20 +1176,20 @@ packages:
 
 snapshots:
 
-  '@cap-js/cds-types@0.20.0(@sap/cds@10.1.1(@eslint/js@10.0.1))(@sap/xssec@4.15.0)(@types/express@5.0.6)':
+  '@cap-js/cds-types@0.20.0(@sap/cds@10.2.2(@eslint/js@10.0.1))(@sap/xssec@4.15.0)(@types/express@5.0.6)':
     dependencies:
-      '@sap/cds': 10.1.1(@eslint/js@10.0.1)
+      '@sap/cds': 10.2.2(@eslint/js@10.0.1)
       '@sap/xssec': 4.15.0
       '@types/express': 5.0.6
 
-  '@cap-js/db-service@3.1.2(@sap/cds@10.1.1(@eslint/js@10.0.1))':
+  '@cap-js/db-service@3.1.2(@sap/cds@10.2.2(@eslint/js@10.0.1))':
     dependencies:
-      '@sap/cds': 10.1.1(@eslint/js@10.0.1)
+      '@sap/cds': 10.2.2(@eslint/js@10.0.1)
 
-  '@cap-js/sqlite@3.1.2(@sap/cds@10.1.1(@eslint/js@10.0.1))':
+  '@cap-js/sqlite@3.1.2(@sap/cds@10.2.2(@eslint/js@10.0.1))':
     dependencies:
-      '@cap-js/db-service': 3.1.2(@sap/cds@10.1.1(@eslint/js@10.0.1))
-      '@sap/cds': 10.1.1(@eslint/js@10.0.1)
+      '@cap-js/db-service': 3.1.2(@sap/cds@10.2.2(@eslint/js@10.0.1))
+      '@sap/cds': 10.2.2(@eslint/js@10.0.1)
     transitivePeerDependencies:
       - generic-pool
 
@@ -1405,15 +1405,15 @@ snapshots:
 
   '@sap/cds-compiler@7.1.2': {}
 
-  '@sap/cds-fiori@2.3.0(@sap/cds@10.1.1(@eslint/js@10.0.1))':
+  '@sap/cds-fiori@2.3.0(@sap/cds@10.2.2(@eslint/js@10.0.1))':
     dependencies:
-      '@sap/cds': 10.1.1(@eslint/js@10.0.1)
+      '@sap/cds': 10.2.2(@eslint/js@10.0.1)
 
-  '@sap/cds@10.1.1(@eslint/js@10.0.1)':
+  '@sap/cds@10.2.2(@eslint/js@10.0.1)':
     dependencies:
       '@eslint/js': 10.0.1
       '@sap/cds-compiler': 7.1.2
-      '@sap/cds-fiori': 2.3.0(@sap/cds@10.1.1(@eslint/js@10.0.1))
+      '@sap/cds-fiori': 2.3.0(@sap/cds@10.2.2(@eslint/js@10.0.1))
       express: 5.3.0
       yaml: 2.9.1
     transitivePeerDependencies:
